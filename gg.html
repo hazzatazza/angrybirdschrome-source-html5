@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Angry Birds Chrome</title>
+    <meta name="Title" content="Angry Birds Chrome">
+    <meta name="description" content="Play Angry Birds online in HD with Google Chrome">
+    <meta name="keywords" content="angry birds, free angry birds, online game, play online, angry birds app, chrome, google chrome, web browser, HD, arcade game, online, play angry birds online, web, application, game, iphone, android, ipad, slingshot, catapult, explosions, golden egg, levels, pigs, birds, stars, high scores, chrome os, chrome web store, angry birds rovio, play angry birds on computer, apps for chrome, play angry birds free">
+    <link href='http://fonts.googleapis.com/css?family=Terminal+Dosis:800' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="css/angry_birds_chrome.css" type="text/css">
+    <link rel="chrome-webstore-item" href="https://chrome.google.com/webstore/detail/aknpkdffaafgjchaibgeefbgmgeghloj">
+    
+    <style>
+      /* Reset page constraints and set background color behind the canvas */
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+        background-color: #000 !important;
+      }
+
+      /* Break the game out of its restrictive legacy HTML table layout */
+      .content-table, .content-table tr, .content-table td {
+        width: 100% !important;
+        height: 100% !important;
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      /* Force the game wrapper layout containers to expand completely */
+      #content, #gameDiv, #playn-root {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+      }
+
+      /* Ensure the core canvas/loading element fits perfectly within the viewport */
+      #playn-root canvas, #loading, #loading img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important; /* Preserves the original game aspect ratio without distortion */
+      }
+
+      /* Hide bottom panel menu buttons and social sharing overlays */
+      .buttons, #social-container, #optimized, #rovionews, #videochapter {
+        display: none !important;
+      }
+    </style>
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-23082676-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+
+    <script>
+        function externalLink(type) {
+            _gaq.push(['_trackEvent', 'Promo', 'Promotional Link: ' + type]);
+        }
+    </script>
+
+    <script type="text/javascript" src="fowl/fowl.nocache.js"></script>
+    <script type="text/javascript"
