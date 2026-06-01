@@ -10,48 +10,50 @@
     <link rel="chrome-webstore-item" href="https://chrome.google.com/webstore/detail/aknpkdffaafgjchaibgeefbgmgeghloj">
     
     <style>
-      /* Center everything on a pitch black background */
-      html {
+      /* Force everything to fill the screen flawlessly without page scrollbars */
+      html, body {
         margin: 0 !important;
         padding: 0 !important;
         width: 100% !important;
         height: 100% !important;
-        background-color: #000 !important;
         overflow: hidden !important;
+        background-color: #000 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        transform-origin: top left;
       }
 
-      body {
-        margin: 0 !important;
-        padding: 0 !important;
-        background-color: #000 !important;
-        /* Force the core body to sit at the game's exact native resolution */
-        width: 1000px !important;
-        height: 600px !important;
-        display: block !important;
+      /* Dynamically sized container that perfectly tracks aspect ratio (1.666...) */
+      #content {
         position: relative !important;
+        width: 100vw !important;
+        height: calc(100vw / (1000 / 600)) !important;
+        max-height: 100vh !important;
+        max-width: calc(100vh * (1000 / 600)) !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
       }
 
-      /* Keep the game element bounds strictly un-stretched at 100% of the native body */
-      #content, #gameDiv, #playn-root, #playn-root canvas {
-        width: 1000px !important;
-        height: 600px !important;
+      /* Force structural layers to scale cleanly with the container frame */
+      #gameDiv, #playn-root, #playn-root canvas {
+        width: 100% !important;
+        height: 100% !important;
         position: absolute !important;
         top: 0 !important;
         left: 0 !important;
         margin: 0 !important;
         padding: 0 !important;
+        display: block !important;
       }
 
       #loading, #loading img {
-        width: 1000px !important;
-        height: 600px !important;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important;
       }
 
-      /* Clear away the bottom interface layout */
+      /* Hide the original clutter overlays */
       .buttons, #social-container, #optimized, #rovionews, #videochapter {
         display: none !important;
       }
@@ -225,26 +227,67 @@
         }, 500);
       }
 
-      // Dynamic Zoom scaling mechanism
-      // Using browser-level 'zoom' instead of CSS transforms preserves the cursor tracking vectors perfectly
-      function scaleWholeViewport() {
-        const baseW = 1000;
-        const baseH = 600;
+      // Advanced Input Proxy and Coordinate Translation Engine
+      (function() {
+        const TARGET_WIDTH = 1000;
+        const TARGET_HEIGHT = 600;
+
+        function translateAndProxyEvent(e) {
+          const canvas = document.querySelector('#playn-root canvas');
+          if (!canvas || e.simulated) return;
+
+          // Block the original uncalibrated event from passing to the game engine
+          e.stopImmediatePropagation();
+          e.preventDefault();
+
+          const rect = canvas.getBoundingClientRect();
+
+          // Calculate where the cursor is relative to the canvas boundary box
+          const relativeX = e.clientX - rect.left;
+          const relativeY = e.clientY - rect.top;
+
+          // Convert those bounds to the rigid 1000x600 grid expected by PlayN
+          const virtualX = (relativeX / rect.width) * TARGET_WIDTH;
+          const virtualY = (relativeY / rect.height) * TARGET_HEIGHT;
+
+          // Build a brand new custom MouseEvent with perfectly translated coordinates
+          const simulatedEvent = new MouseEvent(e.type, {
+            bubbles: true,
+            cancelable: true,
+            view: window,
+            detail: e.detail,
+            screenX: window.screenLeft + rect.left + virtualX,
+            screenY: window.screenTop + rect.top + virtualY,
+            clientX: rect.left + virtualX,
+            clientY: rect.top + virtualY,
+            ctrlKey: e.ctrlKey,
+            altKey: e.altKey,
+            shiftKey: e.shiftKey,
+            metaKey: e.metaKey,
+            button: e.button,
+            buttons: e.buttons,
+            relatedTarget: e.relatedTarget
+          });
+
+          // Mark this event so our interceptor doesn't loop it infinitely
+          simulatedEvent.simulated = true;
+
+          // Dispatched straight into the active render layer
+          canvas.dispatchEvent(simulatedEvent);
+        }
+
+        // Catch the input listeners before the engine finishes loading
+        const eventTypes = ['mousedown', 'mouseup', 'mousemove', 'click', 'dblclick', 'mouseenter', 'mouseleave'];
         
-        // Use real screen dimensions un-impacted by current styling
-        const currentW = window.top.innerWidth;
-        const currentH = window.top.innerHeight;
-
-        // Find the scale factor
-        const scaleFactor = Math.min(currentW / baseW, currentH / baseH);
-
-        // Apply zoom modifier directly to the document root element
-        document.documentElement.style.zoom = scaleFactor;
-      }
-
-      window.addEventListener('resize', scaleWholeViewport);
-      window.addEventListener('DOMContentLoaded', scaleWholeViewport);
-      window.addEventListener('load', scaleWholeViewport);
+        eventTypes.forEach(type => {
+          window.addEventListener(type, (e) => {
+            const canvas = document.querySelector('#playn-root canvas');
+            if (canvas && (e.target === canvas || canvas.contains(e.target))) {
+              translateAndProxyEvent(e);
+            }
+          }, true); // Captured globally at priority execution
+        });
+      })();
     </script>
 
   </body>
