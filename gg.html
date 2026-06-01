@@ -11,52 +11,47 @@
     
     <style>
       /* Center everything on a pitch black background */
-      html, body {
+      html {
         margin: 0 !important;
         padding: 0 !important;
         width: 100% !important;
         height: 100% !important;
-        overflow: hidden !important;
         background-color: #000 !important;
+        overflow: hidden !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+        transform-origin: top left;
       }
 
-      /* Dynamically managed aspect-ratio wrapper */
-      #content {
-        position: relative !important;
-        display: block !important;
-        margin: 0 auto !important;
-        padding: 0 !important;
-      }
-
-      /* Force container structures to seamlessly match layout calculations */
-      #gameDiv, #playn-root {
-        width: 100% !important;
-        height: 100% !important;
+      body {
         margin: 0 !important;
         padding: 0 !important;
+        background-color: #000 !important;
+        /* Force the core body to sit at the game's exact native resolution */
+        width: 1000px !important;
+        height: 600px !important;
+        display: block !important;
+        position: relative !important;
+      }
+
+      /* Keep the game element bounds strictly un-stretched at 100% of the native body */
+      #content, #gameDiv, #playn-root, #playn-root canvas {
+        width: 1000px !important;
+        height: 600px !important;
         position: absolute !important;
         top: 0 !important;
         left: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
       }
 
-      /* Native dimensional rules for the active game graphics canvas */
-      #playn-root canvas {
-        width: 100% !important;
-        height: 100% !important;
-        display: block !important;
-      }
-
-      /* Keep loading container clean and fitted */
       #loading, #loading img {
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: contain !important;
+        width: 1000px !important;
+        height: 600px !important;
       }
 
-      /* Hide structural clutter and tracking overlays */
+      /* Clear away the bottom interface layout */
       .buttons, #social-container, #optimized, #rovionews, #videochapter {
         display: none !important;
       }
@@ -230,50 +225,26 @@
         }, 500);
       }
 
-      // Resizes element dimensions directly instead of using CSS transforms
-      // This ensures the browser maps mouse event bounding boxes (hitboxes) accurately
-      function resizeGameViewport() {
-        const gameContainer = document.getElementById('content');
-        if (!gameContainer) return;
+      // Dynamic Zoom scaling mechanism
+      // Using browser-level 'zoom' instead of CSS transforms preserves the cursor tracking vectors perfectly
+      function scaleWholeViewport() {
+        const baseW = 1000;
+        const baseH = 600;
+        
+        // Use real screen dimensions un-impacted by current styling
+        const currentW = window.top.innerWidth;
+        const currentH = window.top.innerHeight;
 
-        const targetRatio = 1000 / 600; // Original aspect ratio (1.666)
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
-        const windowRatio = windowWidth / windowHeight;
+        // Find the scale factor
+        const scaleFactor = Math.min(currentW / baseW, currentH / baseH);
 
-        let calculatedWidth, calculatedHeight;
-
-        if (windowRatio > targetRatio) {
-          // Window is wider than the game ratio - bound by screen height
-          calculatedHeight = windowHeight;
-          calculatedWidth = windowHeight * targetRatio;
-        } else {
-          // Window is taller than the game ratio - bound by screen width
-          calculatedWidth = windowWidth;
-          calculatedHeight = windowWidth / targetRatio;
-        }
-
-        // Apply raw dimensions directly so hitboxes shift along with visual boundaries
-        gameContainer.style.width = Math.floor(calculatedWidth) + 'px';
-        gameContainer.style.height = Math.floor(calculatedHeight) + 'px';
+        // Apply zoom modifier directly to the document root element
+        document.documentElement.style.zoom = scaleFactor;
       }
 
-      // Track resizing events and initial load frames
-      window.addEventListener('resize', resizeGameViewport);
-      window.addEventListener('DOMContentLoaded', resizeGameViewport);
-
-      // Keep tracking the canvas creation loop to force dynamic updates to internal game properties
-      const layoutObserver = new MutationObserver(() => {
-        resizeGameViewport();
-      });
-      
-      window.addEventListener('load', () => {
-        const rootNode = document.getElementById('playn-root');
-        if (rootNode) {
-          layoutObserver.observe(rootNode, { childList: true, subtree: true });
-        }
-        resizeGameViewport();
-      });
+      window.addEventListener('resize', scaleWholeViewport);
+      window.addEventListener('DOMContentLoaded', scaleWholeViewport);
+      window.addEventListener('load', scaleWholeViewport);
     </script>
 
   </body>
