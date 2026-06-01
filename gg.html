@@ -10,7 +10,7 @@
     <link rel="chrome-webstore-item" href="https://chrome.google.com/webstore/detail/aknpkdffaafgjchaibgeefbgmgeghloj">
     
     <style>
-      /* Prevent scrolling and turn the screen background black */
+      /* Center everything on a pitch black background */
       html, body {
         margin: 0 !important;
         padding: 0 !important;
@@ -23,21 +23,40 @@
         justify-content: center !important;
       }
 
-      /* Keep the original dimensions so the PlayN engine doesn't break */
+      /* Dynamically managed aspect-ratio wrapper */
       #content {
-        width: 1000px !important;
-        height: 600px !important;
         position: relative !important;
-        transform-origin: center center;
+        display: block !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
       }
 
-      /* Ensure the underlying game graphics stay locked inside the frame */
-      #gameDiv, #playn-root, #playn-root canvas {
-        width: 1000px !important;
-        height: 600px !important;
+      /* Force container structures to seamlessly match layout calculations */
+      #gameDiv, #playn-root {
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
       }
 
-      /* Hide the bottom menu bar to keep the fullscreen view clean */
+      /* Native dimensional rules for the active game graphics canvas */
+      #playn-root canvas {
+        width: 100% !important;
+        height: 100% !important;
+        display: block !important;
+      }
+
+      /* Keep loading container clean and fitted */
+      #loading, #loading img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+      }
+
+      /* Hide structural clutter and tracking overlays */
       .buttons, #social-container, #optimized, #rovionews, #videochapter {
         display: none !important;
       }
@@ -127,7 +146,7 @@
     <div class="gamecont" id="content">
       <div id='loginInfo'></div>
       
-      <div id='gameDiv' style="display: inline-block;">
+      <div id='gameDiv'>
         <div id='playn-root'>
           <div id="loading">
             <img src="images/loading_image_bird.png" />
@@ -195,10 +214,6 @@
       }
     </script>
 
-    <iframe style='display: none;' src='http://chrome.angrybirds.com/AppCacheUninstaller.jsp?path=/angrybirds/appcache.nocache.manifest'></iframe>
-    <iframe style='display: none;' src='http://chrome.angrybirds.com/AppCacheUninstaller.jsp?path=/angrybirds111/appcache.nocache.manifest'></iframe>
-    <iframe style='display: none;' src='http://chrome.angrybirds.com/AppCacheUninstaller.jsp?path=/angrybirds112/appcache.nocache.manifest'></iframe>
-
     <noscript>
       <div class="info-noscript">
         Your web browser must have JavaScript enabled in order for this application to display correctly.
@@ -215,25 +230,50 @@
         }, 500);
       }
 
-      // Automatically scales the game to fit your specific display resolution perfectly
-      function scaleGame() {
-        const game = document.getElementById('content');
-        if (!game) return;
+      // Resizes element dimensions directly instead of using CSS transforms
+      // This ensures the browser maps mouse event bounding boxes (hitboxes) accurately
+      function resizeGameViewport() {
+        const gameContainer = document.getElementById('content');
+        if (!gameContainer) return;
 
-        const baseWidth = 1000;
-        const baseHeight = 600;
-        
+        const targetRatio = 1000 / 600; // Original aspect ratio (1.666)
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
+        const windowRatio = windowWidth / windowHeight;
 
-        // Determine best scale factor while preserving original aspect ratio
-        const scale = Math.min(windowWidth / baseWidth, windowHeight / baseHeight);
+        let calculatedWidth, calculatedHeight;
 
-        game.style.transform = `scale(${scale})`;
+        if (windowRatio > targetRatio) {
+          // Window is wider than the game ratio - bound by screen height
+          calculatedHeight = windowHeight;
+          calculatedWidth = windowHeight * targetRatio;
+        } else {
+          // Window is taller than the game ratio - bound by screen width
+          calculatedWidth = windowWidth;
+          calculatedHeight = windowWidth / targetRatio;
+        }
+
+        // Apply raw dimensions directly so hitboxes shift along with visual boundaries
+        gameContainer.style.width = Math.floor(calculatedWidth) + 'px';
+        gameContainer.style.height = Math.floor(calculatedHeight) + 'px';
       }
 
-      window.addEventListener('resize', scaleGame);
-      window.addEventListener('DOMContentLoaded', scaleGame);
+      // Track resizing events and initial load frames
+      window.addEventListener('resize', resizeGameViewport);
+      window.addEventListener('DOMContentLoaded', resizeGameViewport);
+
+      // Keep tracking the canvas creation loop to force dynamic updates to internal game properties
+      const layoutObserver = new MutationObserver(() => {
+        resizeGameViewport();
+      });
+      
+      window.addEventListener('load', () => {
+        const rootNode = document.getElementById('playn-root');
+        if (rootNode) {
+          layoutObserver.observe(rootNode, { childList: true, subtree: true });
+        }
+        resizeGameViewport();
+      });
     </script>
 
   </body>
